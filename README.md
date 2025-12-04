@@ -49,7 +49,7 @@ The primary use of that is with `diagramVertices` and `boundaryVertices`. They'r
 * `edges` is the edges bounding the region
     * Each `edge` indicates the two vertices composing it and, via `neighborSiteIdentifier`, the region immediately opposite to it
 
-# How do we generate and use that information?
+# How do we generate a diagram?
 
 We first determine our list of points, taking (0, 0) as the top left corner of the plane:
 
@@ -65,7 +65,7 @@ basePoints = tuple((
 ))
 ```
 
-(The 0/1 bounding allows for intuitive specification of points. Instead of calculating the exact x and y coords in terms of the space width height you want, you can come up with (x = <25% of width>, y = <25% of width>) and scale up appropriately when processing the generated diagram.) 
+(The 0/1 bounding allows for intuitive specification of points. Instead of calculating the exact x and y coords in terms of the space width height you want, you can come up with points like (x = <25% of width>, y = <25% of width>) and scale the diagram data up appropriately after generating it.) 
 
 We then generate the diagram.
 
@@ -89,4 +89,46 @@ from src.voronout import toJson
 toJson(voronoiDiagram = voronoiDiagram, voronoiJsonPath = "voronoi.json")
 ```
 
-# Example!
+# How can we process a diagram?
+
+Many ways - to quickly illustrate Voronout here, we'll draw generated diagrams with [Matplotlib](https://matplotlib.org/stable/).
+
+With code like..
+
+```Python
+
+basePoints = tuple((Point(x = random.random(), y = random.random()) for _ in range(10)))
+voronoiDiagram = VoronoiDiagram(basePoints = basePoints)
+
+pyplot.ylim(bottom = 1, top = 0)
+
+for voronoiRegion in voronoiDiagram.voronoiRegions.values():
+    for voronoiRegionEdge in voronoiRegion.edges:
+        vertexIdentifier0 = voronoiRegionEdge.vertexIdentifier0
+        vertexIdentifier1 = voronoiRegionEdge.vertexIdentifier1
+
+        vertex0 = diagramVertices[vertexIdentifier0] if vertexIdentifier0 in diagramVertices else diagramVertices[vertexIdentifier0]
+        vertex1 = diagramVertices[vertexIdentifier1] if vertexIdentifier1 in diagramVertices else boundaryVertices[vertexIdentifier1]
+
+        pyplot.plot([vertex0.x, vertex1.x], [vertex0.y, vertex1.y])
+```
+
+.. we can draw diagrams like..
+
+```Python
+basePoints = ({"x": 0.9676, "y": 0.4927}, {"x": 0.2163, "y": 0.7649}, {"x": 0.936, "y": 0.7093}, {"x": 0.206, "y": 0.4837}, {"x": 0.2662, "y": 0.5927}, {"x": 0.4211, "y": 0.7802}, {"x": 0.5706, "y": 0.663}, {"x": 0.5134, "y": 0.3368}, {"x":                 0.7245, "y": 0.2413}, {"x": 0.0938, "y": 0.9428}, {"x": 0.79, "y": 0.1978}, {"x": 0.9625, "y": 0.7223}, {"x": 0.0454, "y": 0.804}, {"x": 0.7317, "y": 0.5099}, {"x": 0.1314, "y": 0.9227})
+```
+
+<img width="640" height="480" alt="voronoi_example_1" src="https://github.com/user-attachments/assets/f9b5bc39-88ea-40ec-97f0-6f4e50caf9d2" />
+
+```Python
+basePoints = ({"x": 0.3386, "y": 0.609}, {"x": 0.9819, "y": 0.4941}, {"x": 0.4702, "y": 0.5913}, {"x": 0.7416, "y": 0.3839}, {"x": 0.6513, "y": 0.698}, {"x": 0.8471, "y": 0.5873}, {"x": 0.4398, "y": 0.0989}, {"x": 0.0949, "y": 0.1276}, {"x":                0.6836, "y": 0.2273}, {"x": 0.186, "y": 0.5486}, {"x": 0.0724, "y": 0.5129}, {"x": 0.912, "y": 0.5932}, {"x": 0.4667, "y": 0.2232}, {"x": 0.0723, "y": 0.173}, {"x": 0.0892, "y": 0.3857})
+```
+
+<img width="640" height="480" alt="voronoi_example_2" src="https://github.com/user-attachments/assets/472478c9-4fad-45ab-a1c2-0434752cbb39" />
+
+```Python
+basePoints = ({"x": 0.4655, "y": 0.0055}, {"x": 0.6653, "y": 0.7868}, {"x": 0.3889, "y": 0.8753}, {"x": 0.6838, "y": 0.0881}, {"x": 0.5915, "y": 0.8032}, {"x": 0.7723, "y": 0.2991}, {"x": 0.6114, "y": 0.1098}, {"x": 0.4801, "y": 0.1928}, {"x":              0.8984, "y": 0.0585}, {"x": 0.6846, "y": 0.0564}, {"x": 0.3141, "y": 0.6487}, {"x": 0.3471, "y": 0.307}, {"x": 0.9848, "y": 0.5728}, {"x": 0.4576, "y": 0.9632}, {"x": 0.5361, "y": 0.7488})
+```
+
+<img width="640" height="480" alt="voronoi_example_3" src="https://github.com/user-attachments/assets/6a7309be-3a8f-4287-973b-afe7c6ef0b62" />
