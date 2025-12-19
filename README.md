@@ -12,8 +12,7 @@ The Voronoi computation is [SciPy's](https://docs.scipy.org/doc/scipy/reference/
 ```
 {
     "points": {.."<pointUUID>": {"x": <point.x>, "y": <point.y>}..},
-    "diagramVertices": {.."<diagramVertexUUID>": {"x": <diagramVertex.x>, "y": <diagramVertex.y>}..},
-    "boundaryVertices": {.."<boundaryVertexUUID>": {"x": <point.x>, "y": <point.y>}..},
+    "vertices": {.."<vertexUUID>": {"x": <vertex.x>, "y": <vertex.y>}..},
     "regions": [
         ..
         {
@@ -104,7 +103,7 @@ With code like..
 planeWidth = 600
 planeHeight = 600
 
-basePoints = tuple((Point(x = random.random(), y = random.random()) for _ in range(10)))
+basePoints = tuple((Point(x = random.random(), y = random.random()) for _ in range(<numBasePoints>)))
 voronoiDiagram = VoronoiDiagram(basePoints = basePoints, planeWidth = 600, planeHeight = 600)
 
 pyplot.ylim(bottom = planeHeight, top = 0)
@@ -120,22 +119,14 @@ for voronoiRegion in voronoiDiagram.voronoiRegions.values():
         pyplot.plot([vertex0.x, vertex1.x], [vertex0.y, vertex1.y])
 ```
 
-.. we can draw diagrams like..
+.. we can create diagrams like this (`numBasePoints = 5`)..
 
-```Python
-basePoints = ({"x": 0.9676, "y": 0.4927}, {"x": 0.2163, "y": 0.7649}, {"x": 0.936, "y": 0.7093}, {"x": 0.206, "y": 0.4837}, {"x": 0.2662, "y": 0.5927}, {"x": 0.4211, "y": 0.7802}, {"x": 0.5706, "y": 0.663}, {"x": 0.5134, "y": 0.3368}, {"x":                 0.7245, "y": 0.2413}, {"x": 0.0938, "y": 0.9428}, {"x": 0.79, "y": 0.1978}, {"x": 0.9625, "y": 0.7223}, {"x": 0.0454, "y": 0.804}, {"x": 0.7317, "y": 0.5099}, {"x": 0.1314, "y": 0.9227})
-```
+<img width="640" height="480" alt="voronout_5_points" src="https://github.com/user-attachments/assets/24373071-2b86-4972-a796-59d3c87b0752" />
 
-<img width="640" height="480" alt="voronoi_example_1" src="https://github.com/user-attachments/assets/f9b5bc39-88ea-40ec-97f0-6f4e50caf9d2" />
+.. or this (`numBasePoints = 20`)..
 
-```Python
-basePoints = ({"x": 0.3386, "y": 0.609}, {"x": 0.9819, "y": 0.4941}, {"x": 0.4702, "y": 0.5913}, {"x": 0.7416, "y": 0.3839}, {"x": 0.6513, "y": 0.698}, {"x": 0.8471, "y": 0.5873}, {"x": 0.4398, "y": 0.0989}, {"x": 0.0949, "y": 0.1276}, {"x":                0.6836, "y": 0.2273}, {"x": 0.186, "y": 0.5486}, {"x": 0.0724, "y": 0.5129}, {"x": 0.912, "y": 0.5932}, {"x": 0.4667, "y": 0.2232}, {"x": 0.0723, "y": 0.173}, {"x": 0.0892, "y": 0.3857})
-```
+<img width="640" height="480" alt="voronout_20_points" src="https://github.com/user-attachments/assets/7c8f6b6b-1c33-4287-82db-6ed22fabe225" />
 
-<img width="640" height="480" alt="voronoi_example_2" src="https://github.com/user-attachments/assets/472478c9-4fad-45ab-a1c2-0434752cbb39" />
+.. or this (`numBasePoints = 100`):
 
-```Python
-basePoints = ({"x": 0.4655, "y": 0.0055}, {"x": 0.6653, "y": 0.7868}, {"x": 0.3889, "y": 0.8753}, {"x": 0.6838, "y": 0.0881}, {"x": 0.5915, "y": 0.8032}, {"x": 0.7723, "y": 0.2991}, {"x": 0.6114, "y": 0.1098}, {"x": 0.4801, "y": 0.1928}, {"x":              0.8984, "y": 0.0585}, {"x": 0.6846, "y": 0.0564}, {"x": 0.3141, "y": 0.6487}, {"x": 0.3471, "y": 0.307}, {"x": 0.9848, "y": 0.5728}, {"x": 0.4576, "y": 0.9632}, {"x": 0.5361, "y": 0.7488})
-```
-
-<img width="640" height="480" alt="voronoi_example_3" src="https://github.com/user-attachments/assets/6a7309be-3a8f-4287-973b-afe7c6ef0b62" />
+<img width="640" height="480" alt="voronout_100_points" src="https://github.com/user-attachments/assets/f47873c6-3dd4-43db-a0c2-0b0442813888" />
