@@ -32,6 +32,14 @@ def test_convert_point_base():
     assert pointBaseConverted.x == testPoint.x
     assert pointBaseConverted.y == 1 - testPoint.y
 
+def test_scale():
+    widthScalar = 10
+    heightScalar = 10
+
+    pointScaled = testPoint.scale(widthScalar = widthScalar, heightScalar = heightScalar)
+    assert pointScaled.x == testPoint.x * widthScalar
+    assert pointScaled.y == testPoint.y * heightScalar
+
 def test_to_array():
     npArray = np.array(testPoint)
     expectedNpArray = np.array(tuple((testPoint.x, testPoint.y)))

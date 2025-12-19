@@ -28,13 +28,25 @@ class Point:
         return Point(x = midpointX, y = midpointY)
     
     # For converting between 0, 0 (top-left) and 0, 0 (bottom-left).
-    def convertPointBase(self):
+    def convertPointBase(self) -> Point:
         return Point(x = self.x, y = boundValue(value = 1 - self.y))
+    
+    # For scaling a Point up when outputting it.
+    def scale(self, widthScalar: float, heightScalar: float) -> Point:
+        return Point(x = boundValue(value = self.x * widthScalar), y = boundValue(value = self.y * heightScalar))
     
     # For ease of JSON conversion.
     def __repr__(self) -> str:
-        return f'{{"x": {self.x}, "y": {self.y}}}'
+        # -0.0 and 0.0 are equivalent in Python - no reason for JSON output of both not to uniformly be 0.0.
+        x = abs(self.x) if self.x == 0.0 else self.x
+        y = abs(self.y) if self.y == 0.0 else self.y
+
+        return f'{{"x": {x}, "y": {y}}}'
     
     # For using Point in scipy.spatial methods that take ArrayLike parameters.
     def __array__(self, dtype=None, copy=None):
         return np.array(tuple((self.x, self.y)))
+    
+    # For checking that Point is in a given list.
+    def __eq__(self, other):
+        return self.x == other.x and self.y == other.y

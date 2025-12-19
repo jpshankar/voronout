@@ -68,7 +68,7 @@ class Boundary(Enum):
         return distanceNumerator / distanceDenominator
 
     @classmethod
-    def findClosestBoundaryToPoint(cls, point: Point, boundaries: Boundary) -> Boundary:
+    def _findClosestBoundaryToPoint(cls, point: Point, boundaries: Boundary) -> Boundary:
         return sorted(boundaries, key = lambda boundary: cls._pointDistanceToBoundary(point = point, boundary = boundary))[0]
 
     # Like Point.distance(Point(vx, vy), Point(0, 0)), but I don't want to pass Point(0, 0).    
@@ -102,7 +102,14 @@ class Boundary(Enum):
         pointMagnitude = cls._calculateVectorMagnitude(vectorPoint = vectorPoint)
         quadrantMagnitude = cls._calculateVectorMagnitude(vectorPoint = Point(x = quadrantVector[0], y = quadrantVector[1]))
 
-        return degrees(acos(vectorDotProduct / (pointMagnitude * quadrantMagnitude)))
+        calculatedCos = vectorDotProduct / (pointMagnitude * quadrantMagnitude)
+
+        # acos expects values in the range of [-1, 1]
+        if calculatedCos > 0:
+            return degrees(acos(min(calculatedCos, 1)))
+        else:
+            # calculatedCos <= 0
+            return degrees(acos(max(calculatedCos, -1)))
     
     @classmethod
     def findBoundaryInLineDirection(cls, linePoint1: Point, linePoint2: Point) -> Boundary:
@@ -151,57 +158,58 @@ class Boundary(Enum):
             intersectionY = pointYNumerator / pointDenominator
 
             intersectionPoint = Point(x = boundValue(value = intersectionX), y = boundValue(value = intersectionY))
-            # maybeBoundVertex handles intersectionPoint having x/y coords outside the bounds.
-            maybeBoundedIntersectionPoint = cls.maybeBoundVertex(maybeBoundableVertex = intersectionPoint, otherVertex = lineSecondPoint)
 
-            return maybeBoundedIntersectionPoint if maybeBoundedIntersectionPoint else intersectionPoint
+            return intersectionPoint
         else:
             if x2dx1 and not y2dy1:
                 # Lines with only dx will intersect either Left or Right boundaries.
                 xCoord = 0 if lineSecondPoint.x < lineFirstPoint.x else 1
-                return Point(x = xCoord, y = lineSecondPoint.y)
+                xIntersectionPoint = Point(x = xCoord, y = lineSecondPoint.y)
+                return xIntersectionPoint
             elif y2dy1 and not x2dx1:
                 # Lines with only dy will intersect either Top or Bottom boundaries.
                 yCoord = 0 if lineSecondPoint.y < lineFirstPoint.y else 1
-                return Point(x = lineSecondPoint.x, y = yCoord)
+                yIntersectionPoint = Point(x = lineSecondPoint.x, y = yCoord)
+                return yIntersectionPoint
             else:
                 # Lines without dx or dy shouldn't happen. 
                 raise ValueError(f"Line {lineFirstPoint}, {lineSecondPoint} unexpectedly has both dx and dy = 0")
-
-    # Figuring out the bound via (dy = (dy/dx) * dx) - we know otherVertex and the negativeVertex bound to apply, so we can calculate the other negativeVertex coord.
+            
     @classmethod
-    def maybeBoundVertex(cls, maybeBoundableVertex: Point, otherVertex: Point) -> Point:
-        maybeBounded = None
-        
-        if maybeBoundableVertex.x < 0 or maybeBoundableVertex.x > 1:
-            closestXBoundary = cls.findClosestBoundaryToPoint(point = maybeBoundableVertex, boundaries = tuple((cls.LEFT, cls.RIGHT)))
+    def boundVertexOnX(cls, vertex: Point, otherVertex: Point) -> Point:
+        closestXBoundary = cls._findClosestBoundaryToPoint(point = vertex, boundaries = tuple((cls.LEFT, cls.RIGHT)))
 
-            # xBound can only be Left or Right
-            xBound = 0 if closestXBoundary == Boundary.LEFT else 1
+        # xBound can only be Left or Right
+        xBound = 0 if closestXBoundary == Boundary.LEFT else 1
 
-            verticesSlope = cls._calculateLineSlope(linePoint1 = otherVertex, linePoint2 = maybeBoundableVertex)
-            boundDx = xBound - otherVertex.x
+        # Calculate (dy/dx) and dx..
+        verticesSlope = cls._calculateLineSlope(linePoint1 = otherVertex, linePoint2 = vertex)
+        boundDx = xBound - otherVertex.x
 
-            verticesSlopeDx = verticesSlope * boundDx
-            updatedY = verticesSlopeDx + otherVertex.y
+        # .. to do updatedY = otherVertex.y + dy.
+        verticesSlopeDx = verticesSlope * boundDx
+        updatedY = verticesSlopeDx + otherVertex.y
 
-            maybeBounded = Point(x = boundValue(value = xBound), y = boundValue(value = updatedY))
+        boundedOnX = Point(x = boundValue(value = xBound), y = boundValue(value = updatedY))
+        return boundedOnX
+    
+    @classmethod
+    def boundVertexOnY(cls, vertex: Point, otherVertex: Point) -> Point:
+        closestYBoundary = cls._findClosestBoundaryToPoint(point = vertex, boundaries = tuple((cls.BOTTOM, cls.TOP)))
+        # yBound can only be Bottom or Top
+        yBound = 0 if closestYBoundary == cls.BOTTOM else 1
 
-        # Get the latest, in case we already updated diagramVerticesMap in the maybeNegativeVertex.x case.
-        latestBoundableVertex = maybeBounded if maybeBounded else maybeBoundableVertex
-
-        if latestBoundableVertex.y < 0 or latestBoundableVertex.y > 1:
-            closestYBoundary = cls.findClosestBoundaryToPoint(point = latestBoundableVertex, boundaries = tuple((cls.BOTTOM, cls.TOP)))
-
-            # yBound can only be Bottom or Top
-            yBound = 0 if closestYBoundary == cls.BOTTOM else 1
-
-            verticesSlope = cls._calculateLineSlope(linePoint1 = otherVertex, linePoint2 = latestBoundableVertex)
+        if vertex.x != otherVertex.x:
+            # Calculate (dy/dx) and dy..
+            verticesSlope = cls._calculateLineSlope(linePoint1 = otherVertex, linePoint2 = vertex)
             boundDy = yBound - otherVertex.y
 
+            # .. to do updatedX = otherVertex.x + dx.
             verticesSlopeDy = boundDy/verticesSlope
             updatedX = verticesSlopeDy + otherVertex.x
 
-            maybeBounded = Point(x = boundValue(value = updatedX), y = boundValue(value = yBound))
-
-        return maybeBounded
+            boundedOnY = Point(x = boundValue(value = updatedX), y = boundValue(value = yBound))
+            return boundedOnY
+        else:
+            # We shouldn't calculate any slope if dx = 0.
+            return Point(x = vertex.x, y = yBound)

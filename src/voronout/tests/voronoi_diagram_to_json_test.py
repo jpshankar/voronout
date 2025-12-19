@@ -16,7 +16,7 @@ def test_voronoi_diagram_to_json(tmp_path):
     voronoiJsonPath = (tmp_path / testOutputFile)
     assert not voronoiJsonPath.exists()
     
-    voronoiDiagram = VoronoiDiagram(basePoints = diagramPoints)
+    voronoiDiagram = VoronoiDiagram(basePoints = diagramPoints, planeWidth = 600, planeHeight = 600)
     toJson(voronoiDiagram = voronoiDiagram, voronoiJsonPath = voronoiJsonPath)
 
     assert voronoiJsonPath.exists()

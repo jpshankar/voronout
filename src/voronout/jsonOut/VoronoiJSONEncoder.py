@@ -9,11 +9,10 @@ class VoronoiJSONEncoder(JSONEncoder):
         return {str(key): loadJSONString(repr(value)) for (key, value) in pointDict.items()}
     
     def default(self, obj):
-        if isinstance(obj, VoronoiDiagram) :
+        if isinstance(obj, VoronoiDiagram):
             return {
                 'points': self._handlePointDict(obj.points),
-                'diagramVertices': self._handlePointDict(obj.diagramVertices),
-                'boundaryVertices': self._handlePointDict(obj.boundaryVertices),
+                'vertices': self._handlePointDict(obj.vertices),
                 'regions': tuple((loadJSONString(repr(region)) for (_, region) in obj.voronoiRegions.items()))
             }
         else:

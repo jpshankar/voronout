@@ -1,6 +1,11 @@
 # Voronout is..
 
-.. a Python module that, given a set of points on a 2D plane bounded by `0 <= x <= 1` and `0 <= y <= 1`, outputs JSON describing the Voronoi diagram computed from those points.
+.. a Python module that, given.. 
+
+* a set of points on a 2D plane bounded by `0 <= x <= 1` and `0 <= y <= 1`
+* the `planeWidth` and `planeHeight` to scale those points to  
+
+..outputs JSON describing the Voronoi diagram in that 2D plan.
 
 The Voronoi computation is [SciPy's](https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.Voronoi.html#scipy.spatial.Voronoi). Voronout translates that into more easily parsible JSON:
 
@@ -32,22 +37,21 @@ The Voronoi computation is [SciPy's](https://docs.scipy.org/doc/scipy/reference/
 
 `points`, like all coordinate data in this JSON, are indexed by unique UUID. This allows us to describe the region in terms of those UUIDs.
 
-The primary use of that is with `diagramVertices` and `boundaryVertices`. They're not region sites - they're the vertices of the edges that bound the regions. Since any given Voronoi edge vertex is likely to be part of multiple edges, it looks better to describe that vertex by its associated UUID than to copy the same coordinate data multiple times.
+The primary use of that is with `vertices` - the vertices of the edges that bound the regions. Since any given Voronoi edge vertex is likely to be part of multiple edges, it looks better to describe that vertex by its associated UUID than to copy the same coordinate data multiple times.
 
-`diagramVertices` are calculated when creating the Voronoi diagram. `boundaryVertices` are calculated when processing the created diagram. It's possible that the diagram could include edges with vertices outside the plane - x > 1 or < 0, y > 1 or < 0. This is correctly part of the diagram, but not optimal in terms of the 2D plane's boundaries.
+`vertices` consist of vertices calculated when the diagram + vertices calculated when processing it. The latter case defines vertices that were found to fall outside the plane - x > 1 or < 0, y > 1 or < 0 - and consequently bounded within it.
 
 ### We keep the diagram within the plane by..
 
 * Determining which of its four boundaries it would intersect with
 * Figuring out where the boundary and the edge, two lines, would intersect
 * Replacing the " outside the plane " vertice with that point of intersection
-* Storing that point of intersection in `boundaryVertices`
 
 `regions` combines the above information:
 
-* `siteIdentifier` indicates which `point` the region was computed with respect to
+* `siteId` indicates which `point` the region was computed with respect to
 * `edges` is the edges bounding the region
-    * Each `edge` indicates the two vertices composing it and, via `neighborSiteIdentifier`, the region immediately opposite to it
+    * Each `edge` indicates the two vertices composing it and, via `neighborSiteId`, the region immediately opposite to it
 
 # How do we generate a diagram?
 
@@ -71,7 +75,7 @@ We then generate the diagram.
 
 ```Python
 from src.voronout import VoronoiDiagram
-voronoiDiagram = VoronoiDiagram(basePoints = basePoints)
+voronoiDiagram = VoronoiDiagram(basePoints = basePoints, planeWidth = <plane width>, planeHeight = <plane height>)
 ```
 
 From there, we can either process the info ourselves..
@@ -97,10 +101,13 @@ With code like..
 
 ```Python
 
-basePoints = tuple((Point(x = random.random(), y = random.random()) for _ in range(10)))
-voronoiDiagram = VoronoiDiagram(basePoints = basePoints)
+planeWidth = 600
+planeHeight = 600
 
-pyplot.ylim(bottom = 1, top = 0)
+basePoints = tuple((Point(x = random.random(), y = random.random()) for _ in range(10)))
+voronoiDiagram = VoronoiDiagram(basePoints = basePoints, planeWidth = 600, planeHeight = 600)
+
+pyplot.ylim(bottom = planeHeight, top = 0)
 
 for voronoiRegion in voronoiDiagram.voronoiRegions.values():
     for voronoiRegionEdge in voronoiRegion.edges:
