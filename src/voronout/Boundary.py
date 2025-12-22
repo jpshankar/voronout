@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from enum import Enum
 from .Point import Point
 
@@ -20,22 +22,22 @@ class Boundary(Enum):
     BOTTOM = 3
     LEFT = 4
 
-    @classmethod
-    def _calculateLineSlope(cls, linePoint1: Point, linePoint2: Point) -> float:
+    @staticmethod
+    def _calculateLineSlope(linePoint1: Point, linePoint2: Point) -> float:
         return (linePoint2.y - linePoint1.y)/(linePoint2.x - linePoint1.x)
 
     # The boundary (line) a VoronoiDiagram edge might intersect with.
-    @classmethod
-    def _getBoundaryLine(cls, boundary: Boundary) -> tuple[Point]:
+    @staticmethod
+    def _getBoundaryLine(boundary: Boundary) -> tuple[Point]:
         match boundary:
-            case cls.TOP: return tuple((Point(x = 0, y = 1), Point(x = 1, y = 1)))
-            case cls.RIGHT: return tuple((Point(x = 1, y = 0), Point(x = 1, y = 1)))
-            case cls.BOTTOM: return tuple((Point(x = 0, y = 0), Point(x = 1, y = 0)))
-            case cls.LEFT: return tuple((Point(x = 0, y = 0), Point(x = 0, y = 1)))
+            case Boundary.TOP: return tuple((Point(x = 0, y = 1), Point(x = 1, y = 1)))
+            case Boundary.RIGHT: return tuple((Point(x = 1, y = 0), Point(x = 1, y = 1)))
+            case Boundary.BOTTOM: return tuple((Point(x = 0, y = 0), Point(x = 1, y = 0)))
+            case Boundary.LEFT: return tuple((Point(x = 0, y = 0), Point(x = 0, y = 1)))
     
     # quadrantVector approximates the relevant x/y-axis segment.
-    @classmethod
-    def _getQuadrantVector(cls, quadrant: _Quadrant, point: Point) -> npArray[float]:
+    @staticmethod
+    def _getQuadrantVector(quadrant: _Quadrant, point: Point) -> npArray[float]:
         match quadrant:
             case _Quadrant.FIRST: return npArray((1, point.y))
             case _Quadrant.SECOND: return npArray((point.x, 1))
@@ -43,8 +45,8 @@ class Boundary(Enum):
             case _Quadrant.FOURTH: return npArray((point.x, -1))
 
     # Returns the next (counter-clockwise from quadrant) _Quadrant.
-    @classmethod
-    def _determineNextQuadrant(cls, quadrant: _Quadrant) -> _Quadrant:
+    @staticmethod
+    def _determineNextQuadrant(quadrant: _Quadrant) -> _Quadrant:
         match quadrant:
             case _Quadrant.FIRST: return _Quadrant.SECOND
             case _Quadrant.SECOND: return _Quadrant.THIRD
@@ -52,9 +54,9 @@ class Boundary(Enum):
             case _Quadrant.FOURTH: return _Quadrant.FIRST
 
     # https://en.wikipedia.org/wiki/Distance_from_a_point_to_a_line#Line_defined_by_two_points
-    @classmethod
-    def _pointDistanceToBoundary(cls, point: Point, boundary: Boundary) -> float:
-        (boundaryFirstPoint, boundarySecondPoint) = cls._getBoundaryLine(boundary)
+    @staticmethod
+    def _pointDistanceToBoundary(point: Point, boundary: Boundary) -> float:
+        (boundaryFirstPoint, boundarySecondPoint) = Boundary._getBoundaryLine(boundary)
 
         secondFirstDx = boundarySecondPoint.x - boundaryFirstPoint.x
         secondFirstDy = boundarySecondPoint.y - boundaryFirstPoint.y
@@ -67,18 +69,18 @@ class Boundary(Enum):
                 
         return distanceNumerator / distanceDenominator
 
-    @classmethod
-    def _findClosestBoundaryToPoint(cls, point: Point, boundaries: Boundary) -> Boundary:
-        return sorted(boundaries, key = lambda boundary: cls._pointDistanceToBoundary(point = point, boundary = boundary))[0]
+    @staticmethod
+    def _findClosestBoundaryToPoint(point: Point, boundaries: Boundary) -> Boundary:
+        return sorted(boundaries, key = lambda boundary: Boundary._pointDistanceToBoundary(point = point, boundary = boundary))[0]
 
     # Like Point.distance(Point(vx, vy), Point(0, 0)), but I don't want to pass Point(0, 0).    
-    @classmethod
-    def _calculateVectorMagnitude(cls, vectorPoint: Point) -> float:
+    @staticmethod
+    def _calculateVectorMagnitude(vectorPoint: Point) -> float:
         return Point.distance(p1 = vectorPoint, p2 = Point(x = 0, y = 0))
     
     # Quadrants on an x/y graph are counterclockwise from east.
-    @classmethod
-    def _determineVectorQuadrant(cls, originatingPoint: Point, vectorPoint: Point) -> _Quadrant:
+    @staticmethod
+    def _determineVectorQuadrant(originatingPoint: Point, vectorPoint: Point) -> _Quadrant:
         dx = vectorPoint.x - originatingPoint.x
         dy = vectorPoint.y - originatingPoint.y
 
@@ -92,15 +94,15 @@ class Boundary(Enum):
             return _Quadrant.FOURTH
     
     # https://www.cuemath.com/geometry/angle-between-vectors/
-    @classmethod
-    def _calculatePointQuadrantVectorsAngle(cls, quadrantVectorPoint: Point, vectorPoint: Point, quadrant: _Quadrant) -> float:
+    @staticmethod
+    def _calculatePointQuadrantVectorsAngle(quadrantVectorPoint: Point, vectorPoint: Point, quadrant: _Quadrant) -> float:
         pointVector = npArray((vectorPoint.x, vectorPoint.y))
-        quadrantVector = cls._getQuadrantVector(quadrant = quadrant, point = quadrantVectorPoint)
+        quadrantVector = Boundary._getQuadrantVector(quadrant = quadrant, point = quadrantVectorPoint)
 
         vectorDotProduct = npDotProduct(pointVector, quadrantVector)
         
-        pointMagnitude = cls._calculateVectorMagnitude(vectorPoint = vectorPoint)
-        quadrantMagnitude = cls._calculateVectorMagnitude(vectorPoint = Point(x = quadrantVector[0], y = quadrantVector[1]))
+        pointMagnitude = Boundary._calculateVectorMagnitude(vectorPoint = vectorPoint)
+        quadrantMagnitude = Boundary._calculateVectorMagnitude(vectorPoint = Point(x = quadrantVector[0], y = quadrantVector[1]))
 
         calculatedCos = vectorDotProduct / (pointMagnitude * quadrantMagnitude)
 
@@ -111,13 +113,13 @@ class Boundary(Enum):
             # calculatedCos <= 0
             return degrees(acos(max(calculatedCos, -1)))
     
-    @classmethod
-    def findBoundaryInLineDirection(cls, linePoint1: Point, linePoint2: Point) -> Boundary:
-        lineQuadrant = cls._determineVectorQuadrant(originatingPoint = linePoint1, vectorPoint = linePoint2)
-        nextQuadrant = cls._determineNextQuadrant(quadrant = lineQuadrant)
+    @staticmethod
+    def findBoundaryInLineDirection(linePoint1: Point, linePoint2: Point) -> Boundary:
+        lineQuadrant = Boundary._determineVectorQuadrant(originatingPoint = linePoint1, vectorPoint = linePoint2)
+        nextQuadrant = Boundary._determineNextQuadrant(quadrant = lineQuadrant)
 
-        lineQuadrantAngle = cls._calculatePointQuadrantVectorsAngle(quadrantVectorPoint = linePoint1, vectorPoint = linePoint2, quadrant = lineQuadrant)
-        nextQuadrantAngle = cls._calculatePointQuadrantVectorsAngle(quadrantVectorPoint = linePoint1, vectorPoint = linePoint2, quadrant = nextQuadrant)
+        lineQuadrantAngle = Boundary._calculatePointQuadrantVectorsAngle(quadrantVectorPoint = linePoint1, vectorPoint = linePoint2, quadrant = lineQuadrant)
+        nextQuadrantAngle = Boundary._calculatePointQuadrantVectorsAngle(quadrantVectorPoint = linePoint1, vectorPoint = linePoint2, quadrant = nextQuadrant)
 
         match lineQuadrant:
             case _Quadrant.FIRST: return Boundary.RIGHT if lineQuadrantAngle < nextQuadrantAngle else Boundary.TOP
@@ -125,10 +127,10 @@ class Boundary(Enum):
             case _Quadrant.THIRD: return Boundary.LEFT if lineQuadrantAngle < nextQuadrantAngle else Boundary.BOTTOM
             case _Quadrant.FOURTH: return Boundary.BOTTOM if lineQuadrantAngle < nextQuadrantAngle else Boundary.RIGHT
  
-    @classmethod
+    @staticmethod
     # https://en.wikipedia.org/wiki/Line%E2%80%93line_intersection#Given_two_points_on_each_line
-    def boundaryLineIntersectionPoint(cls, lineFirstPoint: Point, lineSecondPoint: Point, boundary: Boundary) -> Point:
-        (boundaryFirstPoint, boundarySecondPoint) = cls._getBoundaryLine(boundary)
+    def boundaryLineIntersectionPoint(lineFirstPoint: Point, lineSecondPoint: Point, boundary: Boundary) -> Point:
+        (boundaryFirstPoint, boundarySecondPoint) = Boundary._getBoundaryLine(boundary)
 
         x2dx1 = lineSecondPoint.x - lineFirstPoint.x
         y2dy1 = lineSecondPoint.y - lineFirstPoint.y
@@ -175,15 +177,15 @@ class Boundary(Enum):
                 # Lines without dx or dy shouldn't happen. 
                 raise ValueError(f"Line {lineFirstPoint}, {lineSecondPoint} unexpectedly has both dx and dy = 0")
             
-    @classmethod
-    def boundVertexOnX(cls, vertex: Point, otherVertex: Point) -> Point:
-        closestXBoundary = cls._findClosestBoundaryToPoint(point = vertex, boundaries = tuple((cls.LEFT, cls.RIGHT)))
+    @staticmethod
+    def boundVertexOnX(vertex: Point, otherVertex: Point) -> Point:
+        closestXBoundary = Boundary._findClosestBoundaryToPoint(point = vertex, boundaries = tuple((Boundary.LEFT, Boundary.RIGHT)))
 
         # xBound can only be Left or Right
         xBound = 0 if closestXBoundary == Boundary.LEFT else 1
 
         # Calculate (dy/dx) and dx..
-        verticesSlope = cls._calculateLineSlope(linePoint1 = otherVertex, linePoint2 = vertex)
+        verticesSlope = Boundary._calculateLineSlope(linePoint1 = otherVertex, linePoint2 = vertex)
         boundDx = xBound - otherVertex.x
 
         # .. to do updatedY = otherVertex.y + dy.
@@ -193,15 +195,15 @@ class Boundary(Enum):
         boundedOnX = Point(x = boundValue(value = xBound), y = boundValue(value = updatedY))
         return boundedOnX
     
-    @classmethod
-    def boundVertexOnY(cls, vertex: Point, otherVertex: Point) -> Point:
-        closestYBoundary = cls._findClosestBoundaryToPoint(point = vertex, boundaries = tuple((cls.BOTTOM, cls.TOP)))
+    @staticmethod
+    def boundVertexOnY(vertex: Point, otherVertex: Point) -> Point:
+        closestYBoundary = Boundary._findClosestBoundaryToPoint(point = vertex, boundaries = tuple((Boundary.BOTTOM, Boundary.TOP)))
         # yBound can only be Bottom or Top
-        yBound = 0 if closestYBoundary == cls.BOTTOM else 1
+        yBound = 0 if closestYBoundary == Boundary.BOTTOM else 1
 
         if vertex.x != otherVertex.x:
             # Calculate (dy/dx) and dy..
-            verticesSlope = cls._calculateLineSlope(linePoint1 = otherVertex, linePoint2 = vertex)
+            verticesSlope = Boundary._calculateLineSlope(linePoint1 = otherVertex, linePoint2 = vertex)
             boundDy = yBound - otherVertex.y
 
             # .. to do updatedX = otherVertex.x + dx.

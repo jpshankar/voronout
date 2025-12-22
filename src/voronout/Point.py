@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from dataclasses import dataclass
 from math import sqrt
 
@@ -14,14 +16,14 @@ class Point:
         object.__setattr__(self, "x", boundValue(value = x))
         object.__setattr__(self, "y", boundValue(value = y))
 
-    @classmethod
-    def distance(cls, p1: Point, p2: Point) -> float:
+    @staticmethod
+    def distance(p1: Point, p2: Point) -> float:
         dx = p2.x - p1.x
         dy = p2.y - p1.y
         return boundValue(value = sqrt(pow(dx, 2) + pow(dy, 2)))
 
-    @classmethod
-    def midpoint(cls, p1: Point, p2: Point) -> Point:
+    @staticmethod
+    def midpoint(p1: Point, p2: Point) -> Point:
         midpointX = boundValue(value = (p1.x + p2.x)/2)
         midpointY = boundValue(value = (p1.y + p2.y)/2)
 

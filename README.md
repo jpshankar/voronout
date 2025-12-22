@@ -20,8 +20,8 @@ The Voronoi computation is [SciPy's](https://docs.scipy.org/doc/scipy/reference/
             "edges": [
                 ..
                 {
-                    "vertexIdentifier0": <diagramVertexUUID/boundaryVertexUUID>,
-                    "vertexIdentifier1": <diagramVertexUUID/boundaryVertexUUID>,
+                    "vertexIdentifier0": <vertexUUID0>,
+                    "vertexIdentifier1": <vertexUUID1>,
                     "neighborSiteIdentifier": <pointUUID>
                 }
                 ..
@@ -73,7 +73,7 @@ basePoints = tuple((
 We then generate the diagram.
 
 ```Python
-from src.voronout import VoronoiDiagram
+from voronout.VoronoiDiagram import VoronoiDiagram
 voronoiDiagram = VoronoiDiagram(basePoints = basePoints, planeWidth = <plane width>, planeHeight = <plane height>)
 ```
 
@@ -88,7 +88,7 @@ for voronoiRegion in voronoiDiagram.voronoiRegions.values():
 .. or write it out as JSON for something else to process:
 
 ```Python
-from src.voronout import toJson
+from voronout.VoronoiDiagramToJSON import toJson
 toJson(voronoiDiagram = voronoiDiagram, voronoiJsonPath = "voronoi.json")
 ```
 
