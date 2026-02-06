@@ -6,15 +6,20 @@ from ..regions.VoronoiRegion import VoronoiRegion
 import json
 
 def _makeVoronoiEdge() -> VoronoiEdge:
-    return VoronoiEdge(vertex0Id = uuid4(), vertex1Id = uuid4(), neighborSiteId = uuid4())
+    return VoronoiEdge(edgeId = uuid4(), vertex0Id = uuid4(), vertex1Id = uuid4(), edgeLength = 0.0)
 
 testVoronoiEdge = _makeVoronoiEdge()
 testOtherVoronoiEdge = _makeVoronoiEdge()
-testVoronoiRegion = VoronoiRegion(siteId = uuid4(), edges = tuple((testVoronoiEdge, testOtherVoronoiEdge)))
+
+testEdgesToNeighbors = {
+    testVoronoiEdge.edgeId: uuid4(),
+    testOtherVoronoiEdge.edgeId: uuid4()
+}
+
+testVoronoiRegion = VoronoiRegion(siteId = uuid4(), edges = tuple((testVoronoiEdge, testOtherVoronoiEdge)), edgesToNeighbors = testEdgesToNeighbors)
 
 def test_neighbors():
-    regionNeighbors = testVoronoiRegion.neighbors()
-    assert tuple((testVoronoiEdge.neighborSiteId, testOtherVoronoiEdge.neighborSiteId)) == regionNeighbors
+    assert testVoronoiRegion.neighbors() == tuple(testEdgesToNeighbors.values())
 
 def test_to_json():
     regionJson = json.loads(repr(testVoronoiRegion))
@@ -22,4 +27,6 @@ def test_to_json():
     assert len(regionJson.keys()) == 2
 
     assert regionJson["siteId"] == str(testVoronoiRegion.siteId)
-    assert regionJson["edges"] == [json.loads(repr(testVoronoiEdge)), json.loads(repr(testOtherVoronoiEdge))]
+    
+    assert str(testVoronoiEdge.edgeId) in regionJson["edges"]
+    assert str(testOtherVoronoiEdge.edgeId) in regionJson["edges"]

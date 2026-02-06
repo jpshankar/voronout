@@ -13,22 +13,18 @@ The Voronoi computation is [SciPy's](https://docs.scipy.org/doc/scipy/reference/
 {
     "points": {.."<pointUUID>": {"x": <point.x>, "y": <point.y>}..},
     "vertices": {.."<vertexUUID>": {"x": <vertex.x>, "y": <vertex.y>}..},
+    "edges": {.. "<edgeUUID>": {"vertex0Id": "<vertexUUID>", "vertex1Id": "<vertexUUID>"}..}
     "regions": [
         ..
         {
-            "siteIdentifier": "<pointUUID>",
-            "edges": [
-                ..
-                {
-                    "vertexIdentifier0": <vertexUUID0>,
-                    "vertexIdentifier1": <vertexUUID1>,
-                    "neighborSiteIdentifier": <pointUUID>
-                }
-                ..
-            ]
+            "siteIdentifier": "<UUID>",
+            "edges": [<edgeUUID>s composing the region]
         }
         ..
-    ]
+    ],
+    "regionNeighbors: {
+        "<regionUUID>": [<regionUUID>s neighboring the region]
+    }
 }
 ```
 
@@ -49,8 +45,9 @@ The primary use of that is with `vertices` - the vertices of the edges that boun
 `regions` combines the above information:
 
 * `siteId` indicates which `point` the region was computed with respect to
-* `edges` is the edges bounding the region
-    * Each `edge` indicates the two vertices composing it and, via `neighborSiteId`, the region immediately opposite to it
+* `edges` is the UUIDs of the edges bounding the region, mapping to `edges` one level above
+
+`regionNeighbors` indicates the regions that neighbor each region.
 
 # How do we generate a diagram?
 

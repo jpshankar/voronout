@@ -15,8 +15,10 @@ def test_encoding_voronoi_diagram():
     # voronout/tests suites cover the correctness of data - this just verifies the JSON object's structure.
     voronoiJsonKeys = voronoiJson.keys()
 
-    assert len(voronoiJsonKeys) == 3
+    assert len(voronoiJsonKeys) == 5
 
     assert 'points' in voronoiJsonKeys
     assert 'vertices' in voronoiJsonKeys
+    assert 'edges' in voronoiJsonKeys
     assert 'regions' in voronoiJsonKeys
+    assert 'regionNeighbors' in voronoiJsonKeys

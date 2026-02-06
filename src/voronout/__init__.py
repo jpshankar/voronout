@@ -4,7 +4,6 @@ from .Point import Point
 from .VoronoiDiagram import VoronoiDiagram
 
 from .edges.VoronoiEdge import VoronoiEdge
-from .edges.VoronoiEdgeData import VoronoiEdgeData
 
 from .regions.VoronoiRegion import VoronoiRegion
 

@@ -1,30 +1,32 @@
 from dataclasses import dataclass, field
 from uuid import uuid4
 
-from ..edges.VoronoiEdgeData import VoronoiEdgeData
+from ..edges.VoronoiEdge import VoronoiEdge
 
 @dataclass
 class VoronoiRegionData:
     siteId: uuid4
-    # A dict of edges such that iterating over it will make one complete loop around the region. .. str needs to be a key that can handle multiple [0, -1] cases
-    _edgesData: dict[str, VoronoiEdgeData] = field(default_factory=dict)
-
-    def _makeEdgeVerticesIdentifier(self, edgeVertex0Index: int, edgeVertex1Index: int, neighborSiteIndex: int) -> str:
-        return f"{edgeVertex0Index}_{edgeVertex1Index}_{neighborSiteIndex}"
     
-    def addEdgesData(self, edgeVertex0Index: int, edgeVertex1Index: int, neighborSiteIndex: int, edgeData: VoronoiEdgeData) -> bool:
-        edgeVerticies01Identifier = self._makeEdgeVerticesIdentifier(edgeVertex0Index = edgeVertex0Index, edgeVertex1Index = edgeVertex1Index, neighborSiteIndex = neighborSiteIndex)
-        edgeVerticies10Identifier = self._makeEdgeVerticesIdentifier(edgeVertex0Index = edgeVertex1Index, edgeVertex1Index = edgeVertex0Index, neighborSiteIndex = neighborSiteIndex)
+    _edges: set[VoronoiEdge] = field(default_factory=set)
+    _neighborRegionIds: set[uuid4] = field(default_factory=set)
 
-        edgeDataAlreadyAdded = edgeVerticies01Identifier in self._edgesData or edgeVerticies10Identifier in self._edgesData
-        if not edgeDataAlreadyAdded:
-            # .. then it's OK to add self._edgesData[edgeVerticies01Identifier].
-            self._edgesData[edgeVerticies01Identifier] = edgeData
-            return True
+    _edgesToNeighbors: dict[uuid4, uuid4] = field(default_factory=dict)
+
+    def addEdge(self, edge: VoronoiEdge) -> bool:
+        self._edges.add(edge)
+        
+    def addNeighborRegionId(self, borderingEdgeId: uuid4, neighborRegionId: uuid4):
+        self._neighborRegionIds.add(neighborRegionId)
+        self._edgesToNeighbors[borderingEdgeId] = neighborRegionId
+
+    def getEdgeNeighborRegion(self, edgeId: uuid4) -> uuid4:
+        if edgeId in self._edgesToNeighbors:
+            return self._edgesToNeighbors[edgeId]
         else:
-            # .. then it's not OK to add self._edgesData[edgeVerticies01Identifier], and we should indicate that.
-            return False
+            return None
 
-    def edges(self):
-        for edgeData in self._edgesData.values():
-            yield edgeData
+    def edges(self) -> tuple[VoronoiEdge]:
+        return tuple(self._edges)
+
+    def edgesToNeighbors(self) -> dict[uuid4, uuid4]:
+        return self._edgesToNeighbors
