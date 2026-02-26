@@ -175,11 +175,13 @@ class VoronoiDiagram:
 
         for boundedDiagramVertex in boundedDiagramVertices:
             del self._spatialDiagramVertices[boundedDiagramVertex]
-
-        self.voronoiRegions = { spatialSiteKey: self._makeVoronoiRegion(regionSiteIdentifier = spatialSiteKey, edgesToNeighbors = self._spatialSiteRegionNeighbors[spatialSiteKey]) for spatialSiteKey in self._spatialSiteKeys }
+        
+        voronoiRegionsPreFiltering = { spatialSiteKey: self._makeVoronoiRegion(regionSiteIdentifier = spatialSiteKey, edgesToNeighbors = self._spatialSiteRegionNeighbors[spatialSiteKey]) for spatialSiteKey in self._spatialSiteKeys }
+        self.voronoiRegions = { spatialSiteKey: voronoiRegion for (spatialSiteKey, voronoiRegion) in voronoiRegionsPreFiltering.items() if bool(voronoiRegion) }
 
         # Public-facing values are 0, 0 (top-left).
-        self.points = {pointId: point.convertPointBase().scale(widthScalar = planeWidth, heightScalar = planeHeight) for (pointId, point) in self._spatialSites.items()}
+        voronoiRegionPoints = { pointId: point for (pointId, point) in self._spatialSites.items() if pointId in self.voronoiRegions }
+        self.points = {pointId: point.convertPointBase().scale(widthScalar = planeWidth, heightScalar = planeHeight) for (pointId, point) in voronoiRegionPoints.items()}
 
         self.regionNeighbors = { voronoiRegionId: voronoiRegion.neighbors() for (voronoiRegionId, voronoiRegion) in self.voronoiRegions.items() }
         
@@ -287,6 +289,12 @@ class VoronoiDiagram:
     
     def _makeVoronoiRegion(self, regionSiteIdentifier: uuid4, edgesToNeighbors: dict[uuid4, uuid4]) -> VoronoiRegion:
         regionEdges = self._spatialSiteRegionBoundaries[regionSiteIdentifier]
-        # Sort regionEdges by edgeLength ascending.
-        regionEdges.sort(key = lambda e: e.edgeLength)
-        return VoronoiRegion(siteId = regionSiteIdentifier, edges = regionEdges, edgesToNeighbors = edgesToNeighbors)
+        if len(regionEdges) > 1:
+            # Sort regionEdges by edgeLength ascending.
+            regionEdges.sort(key = lambda e: e.edgeLength)
+            return VoronoiRegion(siteId = regionSiteIdentifier, edges = regionEdges, edgesToNeighbors = edgesToNeighbors)
+        else:
+            loneRegionEdge = regionEdges[0]
+            for regionEdgeList in self._spatialSiteRegionBoundaries.values():
+                if loneRegionEdge in regionEdgeList:
+                    regionEdgeList.remove(loneRegionEdge)
